@@ -1,3 +1,2 @@
-none
-this is the first read me.
-Not now
+更新文件
+  专业课大纲
