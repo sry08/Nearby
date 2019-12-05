@@ -1,0 +1,337 @@
+【EXCEL-VBA】
+'打开工作簿激活特定工作表（用在thisworkbook里）
+Private Sub Workbook_Open()
+Sheets("工作表名字").Activate
+Sheets("工作表名字").Range("A1").Select
+End Sub
+'鼠标点击对本列筛选
+Private Sub Worksheet_SelectionChange(ByVal Target As Range)
+Application.EnableEvents = False '关闭触发事件
+If Target.Count > 1 Then
+    Application.EnableEvents = True
+    Exit Sub
+End If
+If Target.Address = "$J$1" Then '
+    If Target.Value = "执行筛选" Then
+        Target.Value = "取消筛选"
+    Else
+        Target.Value = "执行筛选"
+    End If
+    Range("H1").Select
+Else
+    If Target.Column < 3 Or Target.Column > 4 Or Target.Value = "" Then
+        Application.EnableEvents = True
+        Exit Sub
+    End If
+    If Target.Row = 1 Then
+        Range("1:1").AutoFilter field:=Target.Column
+    Else
+        If Range("J1").Value = "取消筛选" Then
+            Application.EnableEvents = True
+            Exit Sub
+        End If
+        Range("1:1").AutoFilter field:=Target.Column, Criteria1:=Target.Value
+    End If
+End If
+Application.EnableEvents = True
+End Sub
+' 循环10次
+Dim i as Integer
+Do while i < 10
+ActiveSheet.Next.Select
+i=i+1
+loop
+'出错跳转
+On Error GoTo Skip‘出错跳转到skip点
+Skip:’跳出点
+'删除区域
+Range("A5:A45").Select
+Selection.Delete Shift:=xlUp
+'删除列
+Columns("G:G").Select
+Selection.Delete Shift:=xlToLeft
+'删除行
+Rows("2:5").Select
+Selection.Delete Shift:=xlToLeft
+'选定区域
+Range("A1").Select'选定单元格
+Range("A1:A4").Select'选定区域
+Columns("G:G").Select'选定列
+Rows("2:5").Select'选定行
+'设置列宽
+Columns("A:B").ColumnWidth = 8
+'设置行高
+Rows("2:3").RowHeight = 8
+'设置字体
+With Selection.Font
+.Name = "Arial" '常用字体
+.Name = "Times New Roman"'字体
+.Size = 12'字号
+.ColorIndex
+.Bold = False'粗体
+.Italic=false'斜体
+.Underline = false'下划线
+End With
+'单元格内添加内容
+Cells(4, 6) = "xxx"
+Cells(4, 6) = i'i是变量
+'设置单元格格式
+With Selection
+.HorizontalAlignment = xlCenter'居中对齐
+        .VerticalAlignment = xlCenter
+ .ShrinkToFit = False'文字自动适应单元格
+.Orientation = 0'文字倾斜角度
+End With
+ '不锁定单元格
+ Range("A1:B4").Locked = False
+'显示行列号
+ ActiveWindow.DisplayHeadings = True
+ '无格式粘贴
+Range("A3").Select
+Selection.Copy
+Range("A2").Select
+Selection.PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks _
+        :=False, Transpose:=False
+'删除后，下方单元格上移
+Range("A5:E39").Select
+Selection.Delete Shift:=xlUp   
+'合并单元格
+Range("A3:F3").Select
+With Selection
+.MergeCells = True
+End With
+'写入当前时间
+Selection.Value = Date & "-" & Time
+ '插入行
+Rows("1:1").Insert Shift:=xlDown, CopyOrigin:=xlFormatFromLeftOrAbove
+'用户输入内容
+InputBox ("输入内容")
+'信息弹窗
+msgbox
+ '指定位置添加超链接  
+Range("A2").Select
+Selection.Hyperlinks.Add Anchor:=Selection, Address:="", SubAddress:= _
+        "sheet1!A1", TextToDisplay:="hyperlink"
+'隐藏返回空值
+=IFERROR(VLOOKUP(B4,WL!A3:B32,2),"")
+'B列中输入数据在A列中显示序号
+A2=IF(B2=0,"",SUBTOTAL(3,$B$2:B2))
+ '关闭屏幕更新
+Application.ScreenUpdating = False 
+ '关闭自动计算功能
+Application.Calculation = xlManual
+‘添加行标题
+Range("A1").Resize(1, 5) = Split("1 2 3 4 5", " ")'A1为选定的单元格，（1，5）1代表行，5代表列，后面，分割字符串，逗号后为分割的标志，缺省为空格
+
+ 
+'区域内不为空值则添加边框
+Range("A1:F45").Select
+Selection.FormatConditions.Add Type:=xlExpression, Formula1:=LEN(TRIM(A1))>0
+Selection.FormatConditions(Selection.FormatConditions.Count).SetFirstPriority
+With Selection.FormatConditions(1).Borders(xlLeft)'左侧边框
+.LineStyle = xlContinuous
+.TintAndShade = 0
+.Weight = xlThin
+End With
+With Selection.FormatConditions(1).Borders(xlRight)'右侧边框
+.LineStyle = xlContinuous
+.TintAndShade = 0
+.Weight = xlThin
+End With
+With Selection.FormatConditions(1).Borders(xlTop)'上侧边框
+.LineStyle = xlContinuous
+.TintAndShade = 0
+.Weight = xlThin
+End With
+With Selection.FormatConditions(1).Borders(xlBottom)'下侧边框
+.LineStyle = xlContinuous
+.TintAndShade = 0
+.Weight = xlThin
+End With
+ '添加自动填充的序号列
+Range("A2").Select
+ActiveCell.FormulaR1C1 = "=IF(RC[1]=0,"""",SUBTOTAL(3,R1C[1]:RC2))"
+Selection.AutoFill Destination:=Range("A2:A50"), Type:=xlFillDefault'公式区域
+'添加VLOOKUP公式
+Range("C2").Select
+ActiveCell.FormulaR1C1 = _
+"=IFERROR(VLOOKUP(RC[-1],'C:\Users\sunru\Desktop\[二类物料清单代码表.xlsm]原材'!C2:C10,2,0),"""")" '公式
+Selection.AutoFill Destination:=Range("C2:C50"), Type:=xlFillDefault '下拉填充区域
+'复制指定区域代码到另一个工作表特定区域（此种要求两个文件都要打开且不同名）
+Windows("123.xlsm").Activate '源文件
+Range("A8").Select '选择复制区域
+Selection.Copy '复制选择区域
+Workbooks.Open "C:\Users\A009196\Desktop\456.xlsm"
+Workbooks("456.xlsm").Activate '拷贝到的区域
+Range("B1").Select '拷贝到的位置
+ActiveSheet.Paste '粘贴
+ActiveWorkbook.Save
+ActiveWorkbook.Close
+ 
+
+'自动添加时间（写在所需用的表的事件里）
+Private Sub Worksheet_Change(ByVal Target As Range)
+If Target.Row > 1 And Target.Column < 16 Then   'row为在第几行之后，Column为在第几列 and表示∩的关系，
+    Cells(Target.Row, "P") = Now()  'P处为写入时间信息的列
+End If
+End Sub
+ 
+【EXCEL-VBA-轮子】
+1、提取工作表名字到A列
+Sub GetShtName()
+    Dim sht As Worksheet, i As Long
+    i = 1 'i初始值为1
+    With Columns(1)
+        .ClearContents '清除A列内容
+        .NumberFormat = "@" '设置单元格格式为文本
+    End With
+    Cells(1, 1) = "工作表名称目录"
+    For Each sht In Worksheets '遍历工作表
+        i = i + 1
+        Cells(i, 1) = sht.Name '在A列记录工作表名称
+    Next
+End Sub
+2、修改A列工作表名称列
+Sub ReNameSht()
+    Dim strShtName$, sht As Worksheet, i&
+    On Error Resume Next '当程序运行中出现错误时，继续运行
+    For i = 2 To Cells(Rows.Count, 1).End(xlup).Row '遍历当前表格A列的数据
+        strShtName = Cells(i, 1).Value '将表格A列的值，赋予变量strShtName
+        Worksheets(strShtName).Name = Cells(i, 2).Value '工作表重命名
+    Next
+End Sub
+【Visual Basic 6.0】
+
+
+
+
+【批处理】
+1、批量添加列表文件名称的文件夹创建文件夹（批处理）
+	bat代码：md filename
+2、获取当前文件夹下目录列表（批处理）
+	@echo off 
+	dir /b /on >1这个是目录000000000把我删除.txt
+3、导出excel中的图片
+	- 表格必须为.xlsx格式
+	- 改后缀为.zip
+	- 解压  \\xl\media 下
+
+4、::添加环境变量 BAT_HOME
+@echo off
+5、echo 添加 bat 环境变量
+set regpath=HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Environment
+set evname=BAT_HOME
+set batpath=c:\bat
+reg add "%regpath%" /v %evname% /d %batpath% /f
+pause>nul
+
+6、批量修改文件名
+ren *.txt **.txt    将*命名为**，字段中间均有空格，*前面可以加路径，不加的话默认本文件夹内，可用通配符·
+
+7、关闭回显，@表示此语句之后的语句关闭回显
+@echo off
+按任意键继续
+pause
+8、微信双开/多开
+start "" "D:\Program Files (x86)\Tencent\WeChat\WeChat.exe"
+
+【EXCEL公式】
+0.公式规则
+跳转链接：https://docs.qq.com/sheet/DRlFvbEtncXFXcXhu?tab=BB08J2
+0.1统计
+0.1.1 COUNT
+0.2
+0.3
+1.屏蔽公式返回中的0
+	数值型：自定义单元格格式  G/通用格式;G/通用格式;
+	非数值型：修改公式为   =VLOOKUP(D2,A:B,2,0)&""
+2.参数的省略和留白
+	省略：=VLOOKUP(D2,A:B,2)
+	留白：=VLOOKUP(D2,A:B,2,)
+区别：省略为未指定参数，留白则是指定了参数，指定值为0
+3.自动填充修改时间
+=IF(A2="","",IF(B2="",NOW(),B2))	B列为时间填充列
+
+
+
+{inbox}
+
+
+
+
+
+INDEX (单元格区域，指定的行数，指定的列数)
+
+例如以下公式，用于返回 A1:D4 单元格区域第 3 行和第 4 列交叉处的单元格，即 D3 单元格。
+
+=INDEX(A1:D4,3,4)
+INDEX (一行或一列数据，指定要返回第几个元素)
+
+例如以下公式，用于返回 A1:A4 单元格区域中的第 3 个元素，即 A3 单元格的内容。
+
+=INDEX(A1:A4,3)
+MATCH 函数用于在一行或一列的查询区域中搜索指定内容，然后返回该内容在查询区域中的相对位置。
+
+MATCH 函数有三个参数，第一个参数是查找对象，第二参数指定查找的范围，第三参数用于指定匹配方式，通常使用 0，表示精确匹配。
+
+例如以下公式，就是返回 C3 单元格的内容在 A2:A10 中所处的位置，结果为 7。
+
+MATCH(C3,A2:A10,0)
+
+注意这里的 7，是指在查找内容在查询区域中所处的位置，不是说工作表的第几行。另外，如果在数据区域中包含有多个查找值，MATCH 函数将只返回查找值第一次出现的位置。
+
+IF(A2="","",IF(B2="",NOW(),B2))
+B列为时间填充列
+
+
+
+
+
+
+
+
+
+【AUTOHOTKEY】AHK
+
+
+常用查询
+重复
+Loop 3
+{
+    MsgBox This window will be displayed three times.
+}
+
+注：Loop %RunCount% loop后可接变量
+
+
+变量
+MsgBox %clipboard%	剪贴板
+
+激活和操作窗口
+IfWinExist Untitled - Notepad
+{
+    WinActivate
+}
+else
+{
+    Run Notepad
+    WinWait Untitled - Notepad
+    WinActivate
+}
+
+IfWinActive: 检查指定的窗口当前是否活动.
+WinWaitActive: 等待指定窗口变为活动窗口 (通常用在激活窗口的键击后面, 例如按下 Control-F 来打开 "查找" 窗口).
+WinClose: 关闭指定的窗口.
+WinMove: 改变指定窗口的位置和/或大小.
+WinMinimize, WinMaximize, WinRestore: 分别最小化, 最大化或还原指定窗口.
+
+发送键击和鼠标点击
+^!s::
+Send Sincerely,{Enter}John Smith
+return
+
+
+Send ^c!{tab}pasted:^v
+
+热字串	::btw::by the way
+
