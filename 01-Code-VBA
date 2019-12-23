@@ -215,6 +215,28 @@ Sub ReNameSht()
         Worksheets(strShtName).Name = Cells(i, 2).Value '工作表重命名
     Next
 End Sub
+
+'多层字符串替换，数据源在替换参数表，
+Sub byVBA()
+Dim aData, aRef, i As Long, j As Long, s As String
+With Worksheets("替换参数")
+    aData = .Range("a1:b" & .Cells(Rows.Count, 1).End(xlUp).Row) '数据，A列为字符串
+    aRef = .Range("c1:d" & .Cells(Rows.Count, 3).End(xlUp).Row) '参数，C列为原参数，D为替换成的参数，一一对应
+End With
+For i = 2 To UBound(aData)
+    s = aData(i, 1) '
+        For j = 2 To UBound(aRef) '循环使用replace替换
+            s = Replace(s, aRef(j, 1), aRef(j, 2))
+        Next
+    aData(i, 2) = s '结束字符串
+    Next
+    Worksheets("目标工作表").Select
+    Cells.ClearContents '清空数据
+    Range("a1").Resize(UBound(aData), 2) = aData
+End Sub
+
+
+
 【Visual Basic 6.0】
 
 
